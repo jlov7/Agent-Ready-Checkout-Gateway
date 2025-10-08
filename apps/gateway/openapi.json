@@ -1,0 +1,683 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Agent-Ready Checkout Gateway",
+    "description": "ACP-compliant gateway for agent-initiated ecommerce orders.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Live",
+        "operationId": "live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Live Health Live Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Ready",
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Ready Health Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intents": {
+      "post": {
+        "summary": "Create Intent",
+        "operationId": "create_intent_api_v1_intents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntentCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/confirm": {
+      "post": {
+        "summary": "Confirm Intent",
+        "operationId": "confirm_intent_api_v1_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/authorize": {
+      "post": {
+        "summary": "Authorize Payment",
+        "operationId": "authorize_payment_api_v1_authorize_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fulfil": {
+      "post": {
+        "summary": "Fulfil Order",
+        "operationId": "fulfil_order_api_v1_fulfil_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FulfilRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FulfilResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ACPTranscript": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Agent Id"
+          },
+          "customer_id": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Customer Id"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/Intent"
+          },
+          "confirmation": {
+            "$ref": "#/components/schemas/Confirmation"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/Signature"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "1.0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent_id",
+          "customer_id",
+          "intent",
+          "confirmation",
+          "signature"
+        ],
+        "title": "ACPTranscript"
+      },
+      "AuthorizeRequest": {
+        "properties": {
+          "intent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Intent Id"
+          },
+          "transcript_hash": {
+            "type": "string",
+            "title": "Transcript Hash"
+          },
+          "payment_method_token": {
+            "type": "string",
+            "title": "Payment Method Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent_id",
+          "transcript_hash",
+          "payment_method_token"
+        ],
+        "title": "AuthorizeRequest"
+      },
+      "AuthorizeResponse": {
+        "properties": {
+          "authorization_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Authorization Id"
+          },
+          "payment_reference": {
+            "type": "string",
+            "title": "Payment Reference"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "title": "Amount Cents"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "captured": {
+            "type": "boolean",
+            "title": "Captured",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "authorization_id",
+          "payment_reference",
+          "amount_cents",
+          "currency"
+        ],
+        "title": "AuthorizeResponse"
+      },
+      "ConfirmRequest": {
+        "properties": {
+          "intent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Intent Id"
+          },
+          "transcript": {
+            "$ref": "#/components/schemas/ACPTranscript"
+          },
+          "customer_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Ip"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent_id",
+          "transcript"
+        ],
+        "title": "ConfirmRequest"
+      },
+      "ConfirmResponse": {
+        "properties": {
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Confirmed At"
+          },
+          "ledger_entry_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ledger Entry Id"
+          },
+          "transcript_hash": {
+            "type": "string",
+            "title": "Transcript Hash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confirmed_at",
+          "ledger_entry_id",
+          "transcript_hash"
+        ],
+        "title": "ConfirmResponse"
+      },
+      "Confirmation": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "agent_user": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent User"
+          },
+          "human_remark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Human Remark"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "timestamp"
+        ],
+        "title": "Confirmation"
+      },
+      "FulfilRequest": {
+        "properties": {
+          "intent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Intent Id"
+          },
+          "authorization_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Authorization Id"
+          },
+          "fulfillment_reference": {
+            "type": "string",
+            "title": "Fulfillment Reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent_id",
+          "authorization_id",
+          "fulfillment_reference"
+        ],
+        "title": "FulfilRequest"
+      },
+      "FulfilResponse": {
+        "properties": {
+          "fulfilment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fulfilment Id"
+          },
+          "receipt_png_path": {
+            "type": "string",
+            "title": "Receipt Png Path"
+          },
+          "receipt_pdf_path": {
+            "type": "string",
+            "title": "Receipt Pdf Path"
+          },
+          "transcript_hash": {
+            "type": "string",
+            "title": "Transcript Hash"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fulfilment_id",
+          "receipt_png_path",
+          "receipt_pdf_path",
+          "transcript_hash",
+          "issued_at"
+        ],
+        "title": "FulfilResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Intent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ToolCall"
+            },
+            "type": "array",
+            "title": "Actions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "expires_at"
+        ],
+        "title": "Intent"
+      },
+      "IntentCreateRequest": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "title": "Agent Id"
+          },
+          "customer_id": {
+            "type": "string",
+            "title": "Customer Id"
+          },
+          "cart": {
+            "type": "object",
+            "title": "Cart"
+          },
+          "max_total": {
+            "type": "number",
+            "title": "Max Total"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agent_id",
+          "customer_id",
+          "cart",
+          "max_total"
+        ],
+        "title": "IntentCreateRequest"
+      },
+      "IntentCreateResponse": {
+        "properties": {
+          "intent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Intent Id"
+          },
+          "nonce": {
+            "type": "string",
+            "title": "Nonce"
+          },
+          "client_secret": {
+            "type": "string",
+            "title": "Client Secret"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent_id",
+          "nonce",
+          "client_secret",
+          "expires_at"
+        ],
+        "title": "IntentCreateResponse"
+      },
+      "Signature": {
+        "properties": {
+          "alg": {
+            "type": "string",
+            "title": "Alg"
+          },
+          "nonce": {
+            "type": "string",
+            "title": "Nonce"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alg",
+          "nonce",
+          "value"
+        ],
+        "title": "Signature"
+      },
+      "ToolCall": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Tool or action identifier"
+          },
+          "tool_call_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tool Call Id",
+            "description": "Unique identifier for the tool invocation"
+          },
+          "inputs": {
+            "type": "object",
+            "title": "Inputs"
+          },
+          "outputs": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Outputs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "tool_call_id"
+        ],
+        "title": "ToolCall"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+
+# Environments
+.env
+.env.*
+.venv/
+env/
+venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# Docker
+*.pid
+
+# Langfuse / telemetry artifacts
+otel/*.db
+langfuse/data/
+
+# Receipts
+receipts/

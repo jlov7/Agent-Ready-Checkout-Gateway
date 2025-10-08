@@ -1,0 +1,12 @@
+{
+  "SKU123": {
+    "currency": "USD",
+    "unit_price": 4250,
+    "description": "Agent Starter Kit"
+  },
+  "SKU456": {
+    "currency": "USD",
+    "unit_price": 1500,
+    "description": "Consent Ledger Notebook"
+  }
+}

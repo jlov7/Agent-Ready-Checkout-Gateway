@@ -1,0 +1,14 @@
+[
+  {
+    "sku": "SKU123",
+    "name": "Agent Starter Kit",
+    "quantity": 25,
+    "warehouse": "FULFILLMENT-1"
+  },
+  {
+    "sku": "SKU456",
+    "name": "Consent Ledger Notebook",
+    "quantity": 40,
+    "warehouse": "FULFILLMENT-2"
+  }
+]

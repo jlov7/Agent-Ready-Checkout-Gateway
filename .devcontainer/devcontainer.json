@@ -1,0 +1,19 @@
+{
+  "name": "Agent-Ready Checkout Gateway",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "gateway",
+  "workspaceFolder": "/app",
+  "settings": {
+    "python.pythonPath": "/usr/local/bin/python",
+    "editor.formatOnSave": true
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance"
+  ],
+  "postCreateCommand": "pip install -e '.[dev]'",
+  "forwardPorts": [8080, 3000, 4317],
+  "remoteEnv": {
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"
+  }
+}
