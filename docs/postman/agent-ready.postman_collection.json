@@ -1,0 +1,82 @@
+{
+  "info": {
+    "name": "Agent-Ready Checkout Gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Intent",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"agent_id\": \"https://agents.example.com/agent/123\",\n  \"customer_id\": \"https://customers.example.com/user/456\",\n  \"cart\": {\n    \"items\": [\n      {\"sku\": \"SKU123\", \"quantity\": 1}\n    ]\n  },\n  \"max_total\": 42.50,\n  \"currency\": \"usd\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/intents",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "intents"]
+        }
+      }
+    },
+    {
+      "name": "Confirm Intent",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "{{confirm_idempotency_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"intent_id\": \"{{intent_id}}\",\n  \"transcript\": {{transcript}}\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/confirm",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "confirm"]
+        }
+      }
+    },
+    {
+      "name": "Authorize Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "{{authorize_idempotency_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"intent_id\": \"{{intent_id}}\",\n  \"transcript_hash\": \"{{transcript_hash}}\",\n  \"payment_method_token\": \"pm_card_visa\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/authorize",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "authorize"]
+        }
+      }
+    },
+    {
+      "name": "Fulfil Order",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"intent_id\": \"{{intent_id}}\",\n  \"authorization_id\": \"{{authorization_id}}\",\n  \"fulfillment_reference\": \"SHIP123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/fulfil",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "fulfil"]
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,12 @@
 
 This document provides an overview of the ACP Agent-Ready Checkout Gateway API. The canonical contract is published as `apps/gateway/openapi.json` and served by the FastAPI application.
 
+OpenAPI explorer endpoints:
+
+- JSON: `/openapi.json`
+- Swagger UI: `/docs`
+- Redoc: `/redoc`
+
 ## Base URL
 
 ```
@@ -20,9 +26,17 @@ Initiate an ACP order intent. Validates schema, domain allow-list, and rate-limi
 
 Record explicit human consent. Appends to the consent ledger with timestamp, IP, user-agent, and hash linkage. Enforces nonce expiry.
 
+Headers:
+
+- `Idempotency-Key` (optional) — identical payloads replay cached responses; mismatched payloads return HTTP 409.
+
 ### POST `/authorize`
 
-Performs payment authorization through the configured PSP adapter (Stripe test-mode by default). Requires a valid consent transcript hash. Returns masked payment reference.
+Performs payment authorization through the configured PSP adapter (Stripe test-mode by default). Requires a valid consent transcript hash. Returns masked payment reference alongside the policy hook outcome.
+
+Headers:
+
+- `Idempotency-Key` (optional) — identical payloads replay cached responses; mismatched payloads return HTTP 409.
 
 ### POST `/fulfil`
 
@@ -43,6 +57,17 @@ Errors follow the structure:
 }
 ```
 
+Authorization responses extend the schema with:
+
+```json
+{
+  "policy_decision": "ALLOW | DENY | REVIEW",
+  "policy_reasons": ["human readable justification"]
+}
+```
+
+The default policy hook lives in `apps/gateway/app/policies/policy_hook.py` and can be replaced with bespoke trust-and-safety logic.
+
 ## Security headers
 
 - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
@@ -53,4 +78,4 @@ Errors follow the structure:
 
 ## Webhooks
 
-Stripe webhooks are verified via HMAC SHA-256 using `HMAC_WEBHOOK_SECRET`. Payloads are recorded in the consent ledger as audit entries.
+Stripe webhooks are verified via HMAC SHA-256 using `HMAC_WEBHOOK_SECRET`. Payloads are recorded in the consent ledger as audit entries. See `docs/Webhooks.md` for a fail-closed verification example and idempotency guidance.

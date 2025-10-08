@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping build the Agent-Ready Checkout Gateway! This guide describes how to get started.
+Thanks for helping build the Agent-Ready Checkout Gateway! This is a personal R&D project and contributions are welcome on a best-effort basis.
 
 ## Getting started
 
@@ -24,12 +24,23 @@ Before opening a PR:
 - Ensure CI passes locally (`scripts/run_ci.sh` mirrors GH Actions).
 - Update documentation (`docs/`) and `CHANGELOG.md`.
 - Add or update tests for new behaviour.
+- Include a `Signed-off-by:` line (Developer Certificate of Origin) on every commit.
 
 ## Commit guidelines
 
 - Conventional commits are recommended (`feat:`, `fix:`, `chore:`).
 - Keep commits focused and well-described.
 - Include references to related issues.
+
+## Developer Certificate of Origin (DCO)
+
+This project requires every contribution to be signed off in accordance with the [Developer Certificate of Origin](https://developercertificate.org/). Each commit message must include the following line (using your real name and email):
+
+```
+Signed-off-by: Your Name <you@example.com>
+```
+
+You can automate this with `git commit -s`.
 
 ## Code of Conduct
 

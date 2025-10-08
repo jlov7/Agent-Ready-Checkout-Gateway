@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
+from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any, Dict
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from opentelemetry import trace
 
 from packages.shared.shared.observability.langfuse import emit_trace
@@ -30,12 +32,14 @@ from ..core.deps import (
     get_context,
     get_intent_store,
     get_ledger_service,
+    get_idempotency_service,
     get_nonce_service,
     get_settings,
     get_stripe_adapter,
 )
 from ..core.lifespan import limiter
 from ..services.state import IntentStore
+from ..policies.policy_hook import PolicyDecision, PolicyInput, evaluate_policy
 
 
 router = APIRouter(prefix="/api/v1")
@@ -93,6 +97,8 @@ async def create_intent(
             client_secret=intent["client_secret"],
             ttl_seconds=settings.nonce_ttl_seconds,
             items=payload.cart.get("items", []),
+            agent_id=payload.agent_id,
+            customer_id=payload.customer_id,
         )
 
         emit_trace(
@@ -112,14 +118,28 @@ async def create_intent(
 
 @router.post("/confirm", response_model=ConfirmResponse)
 async def confirm_intent(
+    request: Request,
     payload: ConfirmRequest,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     store: IntentStore = Depends(get_intent_store),
     nonce_service=Depends(get_nonce_service),
     ledger_service=Depends(get_ledger_service),
     settings=Depends(get_settings),
     context=Depends(get_context),
+    idempotency_service=Depends(get_idempotency_service),
 ):
     with tracer.start_as_current_span("gateway.confirm_intent") as span:
+        payload_dict = payload.model_dump(mode="json")
+        if idempotency_key:
+            try:
+                cached = await idempotency_service.check_existing(
+                    key=idempotency_key, endpoint="confirm", payload=payload_dict
+                )
+            except ValueError:
+                raise HTTPException(status_code=409, detail="idempotency conflict")
+            if cached:
+                return ConfirmResponse(**json.loads(cached))
+
         state = await store.get(payload.intent_id)
 
         transcript = payload.transcript
@@ -131,7 +151,6 @@ async def confirm_intent(
             raise HTTPException(status_code=409, detail="nonce replay detected")
 
         signature_provider = HMACSignatureProvider(secret=settings.hmac_webhook_secret)
-        from copy import deepcopy
 
         raw_transcript = transcript.model_dump()
         transcript_for_signature = deepcopy(raw_transcript)
@@ -145,24 +164,22 @@ async def confirm_intent(
             raise HTTPException(status_code=401, detail="invalid signature")
 
         transcript_hash = compute_transcript_hash(raw_transcript)
+        effective_ip = payload.customer_ip or (request.client.host if request.client else None)
+        effective_ua = payload.user_agent or request.headers.get("user-agent")
         metadata: Dict[str, Any] = {
             "agent_id": transcript.agent_id,
             "customer_id": transcript.customer_id,
             "confirmed_at": datetime.now(timezone.utc).isoformat(),
+            "customer_ip": effective_ip,
+            "user_agent": effective_ua,
         }
-        metadata.update(
-            {
-                "customer_ip": payload.customer_ip,
-                "user_agent": payload.user_agent,
-            }
-        )
 
         entry = await ledger_service.append_entry(
             intent_id=payload.intent_id,
             transcript_hash=transcript_hash,
             payload={"transcript": raw_transcript, "metadata": metadata},
-            customer_ip=payload.customer_ip,
-            user_agent=payload.user_agent,
+            customer_ip=effective_ip,
+            user_agent=effective_ua,
         )
         await store.set_transcript_hash(payload.intent_id, transcript_hash)
 
@@ -175,26 +192,67 @@ async def confirm_intent(
 
         span.set_attribute("gateway.ledger_entry_id", entry.id)
 
-        return ConfirmResponse(
+        response = ConfirmResponse(
             confirmed_at=entry.created_at,
             ledger_entry_id=UUID(entry.id),
             transcript_hash=transcript_hash,
         )
 
+        if idempotency_key:
+            await idempotency_service.store(
+                key=idempotency_key,
+                endpoint="confirm",
+                payload=payload_dict,
+                response=response.model_dump(mode="json"),
+            )
+
+        return response
+
 
 @router.post("/authorize", response_model=AuthorizeResponse)
 async def authorize_payment(
+    request: Request,
     payload: AuthorizeRequest,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     store: IntentStore = Depends(get_intent_store),
     stripe_adapter=Depends(get_stripe_adapter),
     context=Depends(get_context),
+    idempotency_service=Depends(get_idempotency_service),
 ):
     with tracer.start_as_current_span("gateway.authorize_payment") as span:
+        payload_dict = payload.model_dump(mode="json")
+        if idempotency_key:
+            try:
+                cached = await idempotency_service.check_existing(
+                    key=idempotency_key, endpoint="authorize", payload=payload_dict
+                )
+            except ValueError:
+                raise HTTPException(status_code=409, detail="idempotency conflict")
+            if cached:
+                return AuthorizeResponse(**json.loads(cached))
+
         state = await store.get(payload.intent_id)
         if not state.transcript_hash:
             raise HTTPException(status_code=409, detail="intent not confirmed")
         if state.transcript_hash != payload.transcript_hash:
             raise HTTPException(status_code=400, detail="transcript hash mismatch")
+
+        risk_signals = {
+            "user_agent": request.headers.get("user-agent"),
+            "customer_ip": request.client.host if request.client else None,
+        }
+
+        policy_input = PolicyInput(
+            intent_id=str(payload.intent_id),
+            agent_id=state.agent_id,
+            customer_id=state.customer_id,
+            amount_cents=state.amount_cents,
+            currency=state.currency,
+            risk_signals=risk_signals,
+        )
+        policy_result = evaluate_policy(policy_input)
+        if policy_result.decision == PolicyDecision.DENY:
+            raise HTTPException(status_code=403, detail={"reasons": policy_result.reasons})
 
         intent = await stripe_adapter.confirm_payment(
             intent_id=state.stripe_intent_id,
@@ -212,13 +270,25 @@ async def authorize_payment(
             output={"authorization_id": str(authorization_id)},
         )
 
-        return AuthorizeResponse(
+        response = AuthorizeResponse(
             authorization_id=authorization_id,
             payment_reference=payment_reference,
             amount_cents=state.amount_cents,
             currency=state.currency,
             captured=intent.get("status") == "succeeded",
+            policy_decision=policy_result.decision.value,
+            policy_reasons=policy_result.reasons,
         )
+
+        if idempotency_key:
+            await idempotency_service.store(
+                key=idempotency_key,
+                endpoint="authorize",
+                payload=payload_dict,
+                response=response.model_dump(mode="json"),
+            )
+
+        return response
 
 
 @router.post("/fulfil", response_model=FulfilResponse)

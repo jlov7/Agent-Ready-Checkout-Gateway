@@ -18,3 +18,6 @@ openapi:
 
 seed:
 	bash scripts/seed_demo.sh
+
+demo:
+	./scripts/run_demo.sh

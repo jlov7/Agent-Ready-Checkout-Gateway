@@ -19,6 +19,8 @@ class OrderIntent(Base):
     amount_cents = Column(Integer, nullable=False)
     currency = Column(String(16), nullable=False)
     items = Column(JSON, nullable=False)
+    agent_id = Column(String(255), nullable=False)
+    customer_id = Column(String(255), nullable=False)
     transcript_hash = Column(String(64), nullable=True)
     authorization_id = Column(String(36), nullable=True)
     payment_reference = Column(String(128), nullable=True)
@@ -41,6 +43,8 @@ class OrderIntent(Base):
             "amount_cents": self.amount_cents,
             "currency": self.currency,
             "items": self.items,
+            "agent_id": self.agent_id,
+            "customer_id": self.customer_id,
             "transcript_hash": self.transcript_hash,
             "authorization_id": self.authorization_id,
             "payment_reference": self.payment_reference,

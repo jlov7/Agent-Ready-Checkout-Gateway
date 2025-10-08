@@ -1,5 +1,12 @@
 # Threat Model
 
+**Summary:**
+- Consent drift: explicit `/confirm` with signed transcripts and policy hook review paths
+- Replay attempts: nonce + TTL + idempotency ledger
+- Tool-call loops: MCP tooling limited to deterministic mocks with rate limiting
+- Provenance loss: receipts signed via C2PA with hash-chain linkage
+- Webhook spoofing: Stripe signature verification sample (fail closed)
+
 ## Scope
 
 - FastAPI gateway (`apps/gateway`)

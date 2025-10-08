@@ -57,6 +57,7 @@ Ledger integrity can be verified by re-computing the chain in order of `created_
 - Nonce must be 128 bits of entropy, base64url encoded.
 - TTL enforced via `NONCE_TTL_SECONDS` env variable.
 - Nonces are persisted in Redis-compatible cache (see `NonceService`); default uses in-memory expiring store for development.
+- Clients should combine nonces with `Idempotency-Key` headers on `/confirm` and `/authorize` so accidental retries return cached responses instead of tripping replay detections.
 
 ## Signatures
 

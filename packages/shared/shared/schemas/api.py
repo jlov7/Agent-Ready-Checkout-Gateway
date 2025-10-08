@@ -49,6 +49,8 @@ class AuthorizeResponse(BaseModel):
     amount_cents: int
     currency: str
     captured: bool = False
+    policy_decision: str
+    policy_reasons: list[str]
 
 
 class FulfilRequest(BaseModel):

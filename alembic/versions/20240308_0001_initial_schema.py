@@ -29,6 +29,8 @@ def upgrade() -> None:
         sa.Column("amount_cents", sa.Integer(), nullable=False),
         sa.Column("currency", sa.String(length=16), nullable=False),
         sa.Column("items", sa.JSON(), nullable=False),
+        sa.Column("agent_id", sa.String(length=255), nullable=False),
+        sa.Column("customer_id", sa.String(length=255), nullable=False),
         sa.Column("transcript_hash", sa.String(length=64), nullable=True),
         sa.Column("authorization_id", sa.String(length=36), nullable=True),
         sa.Column("payment_reference", sa.String(length=128), nullable=True),
@@ -59,8 +61,21 @@ def upgrade() -> None:
     op.create_index("ix_consent_ledger_intent_id", "consent_ledger", ["intent_id"])
     op.create_index("ix_consent_ledger_transcript_hash", "consent_ledger", ["transcript_hash"])
 
+    op.create_table(
+        "idempotency_keys",
+        sa.Column("key", sa.String(length=128), nullable=False),
+        sa.Column("endpoint", sa.String(length=64), nullable=False),
+        sa.Column("payload_hash", sa.String(length=64), nullable=False),
+        sa.Column("response_body", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.PrimaryKeyConstraint("key", "endpoint"),
+    )
+    op.create_unique_constraint("uq_idempotency_endpoint", "idempotency_keys", ["key", "endpoint"])
+
 
 def downgrade() -> None:
+    op.drop_constraint("uq_idempotency_endpoint", "idempotency_keys", type_="unique")
+    op.drop_table("idempotency_keys")
     op.drop_index("ix_consent_ledger_transcript_hash", table_name="consent_ledger")
     op.drop_index("ix_consent_ledger_intent_id", table_name="consent_ledger")
     op.drop_table("consent_ledger")

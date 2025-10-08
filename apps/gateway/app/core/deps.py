@@ -27,3 +27,7 @@ def get_stripe_adapter(context: AppContext = Depends(get_context)):
 
 def get_settings(context: AppContext = Depends(get_context)):
     return context.settings
+
+
+def get_idempotency_service(context: AppContext = Depends(get_context)):
+    return context.idempotency_service

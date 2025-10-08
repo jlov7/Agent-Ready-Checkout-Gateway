@@ -31,6 +31,7 @@ except ImportError:  # pragma: no cover - optional dependencies
 
 from packages.shared.shared.observability.tracing import build_langfuse, setup_tracing
 from packages.shared.shared.ledger.service import ConsentLedgerService
+from packages.shared.shared.idempotency.service import IdempotencyService
 from packages.shared.shared.security.nonce import NonceService
 
 from ..db.session import get_session_factory, init_db
@@ -119,6 +120,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[AppContext]:
     intent_store = IntentStore(session_factory)
     nonce_service = NonceService(settings.nonce_ttl_seconds)
     ledger_service = ConsentLedgerService(session_factory)
+    idempotency_service = IdempotencyService(session_factory)
 
     from packages.shared.shared.psp.stripe_adapter import StripeAdapter
 
@@ -136,6 +138,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[AppContext]:
         ledger_service=ledger_service,
         stripe_adapter=stripe_adapter,
         langfuse_client=langfuse_client,
+        idempotency_service=idempotency_service,
         session_factory=session_factory,
     )
 

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl, model_validator, validator
+from pydantic import BaseModel, Field, HttpUrl, validator
 
 
 class ToolCall(BaseModel):
@@ -23,6 +23,8 @@ class Intent(BaseModel):
     def _ensure_timezone(cls, value: datetime) -> datetime:
         if value.tzinfo is None:
             raise ValueError("expires_at must include timezone information")
+        if value < datetime.now(timezone.utc):
+            raise ValueError("intent has expired")
         return value
 
 
@@ -53,11 +55,3 @@ class ACPTranscript(BaseModel):
     confirmation: Confirmation
     signature: Signature
     version: str = "1.0"
-
-    @model_validator(mode="after")
-    def _intent_not_expired(cls, values: "ACPTranscript") -> "ACPTranscript":
-        expires_at: datetime = values.intent.expires_at
-        now = datetime.now(timezone.utc)
-        if expires_at < now:
-            raise ValueError("intent has expired")
-        return values

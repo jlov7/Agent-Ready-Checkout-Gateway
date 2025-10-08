@@ -21,6 +21,8 @@ class IntentState:
     amount_cents: int
     currency: str
     items: List[Dict[str, Any]]
+    agent_id: str
+    customer_id: str
     transcript_hash: Optional[str] = None
     authorization_id: Optional[UUID] = None
     payment_reference: Optional[str] = None
@@ -47,6 +49,8 @@ class IntentStore:
         client_secret: str,
         ttl_seconds: int,
         items: List[Dict[str, Any]],
+        agent_id: str,
+        customer_id: str,
     ) -> IntentState:
         intent_id = uuid4()
         nonce = secrets.token_urlsafe(32)
@@ -61,6 +65,8 @@ class IntentStore:
             amount_cents=amount_cents,
             currency=currency,
             items=items,
+            agent_id=agent_id,
+            customer_id=customer_id,
         )
 
         async with self._session_factory() as session:
@@ -131,6 +137,8 @@ class IntentStore:
             amount_cents=record.amount_cents,
             currency=record.currency,
             items=record.items,
+            agent_id=record.agent_id,
+            customer_id=record.customer_id,
             transcript_hash=record.transcript_hash,
             authorization_id=authorization_id,
             payment_reference=record.payment_reference,

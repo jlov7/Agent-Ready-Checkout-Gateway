@@ -98,6 +98,17 @@
       "post": {
         "summary": "Confirm Intent",
         "operationId": "confirm_intent_api_v1_confirm_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional idempotency key to replay safe responses"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -136,6 +147,17 @@
       "post": {
         "summary": "Authorize Payment",
         "operationId": "authorize_payment_api_v1_authorize_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional idempotency key to replay safe responses"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -299,6 +321,17 @@
             "type": "boolean",
             "title": "Captured",
             "default": false
+          },
+          "policy_decision": {
+            "type": "string",
+            "title": "Policy Decision"
+          },
+          "policy_reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "title": "Policy Reasons"
           }
         },
         "type": "object",
@@ -306,7 +339,9 @@
           "authorization_id",
           "payment_reference",
           "amount_cents",
-          "currency"
+          "currency",
+          "policy_decision",
+          "policy_reasons"
         ],
         "title": "AuthorizeResponse"
       },

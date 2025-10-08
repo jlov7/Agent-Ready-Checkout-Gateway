@@ -3,10 +3,13 @@ from __future__ import annotations
 import asyncio
 from uuid import uuid4
 
+import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from packages.shared.shared.ledger.database import Base
 from packages.shared.shared.ledger.service import ConsentLedgerService
+
+pytest.importorskip("aiosqlite")
 
 
 def test_consent_ledger_chain_integrity(tmp_path):

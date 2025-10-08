@@ -5,7 +5,7 @@ from functools import lru_cache
 from typing import List
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, HttpUrl, PostgresDsn, model_validator
+from pydantic import BaseModel, Field, HttpUrl, PostgresDsn
 
 load_dotenv(".env")
 
@@ -46,13 +46,6 @@ class AppSettings(BaseModel):
         "extra": "allow",
     }
 
-    @model_validator(mode="before")
-    def _split_allowed_domains(cls, values: dict[str, str]) -> dict[str, str]:
-        domains = values.get("ALLOWED_AGENT_DOMAINS") or values.get("allowed_agent_domains")
-        if isinstance(domains, str):
-            values["ALLOWED_AGENT_DOMAINS"] = [d.strip() for d in domains.split(",") if d.strip()]
-        return values
-
 
 def _env_overrides() -> dict[str, str]:
     overrides: dict[str, str] = {}
@@ -67,4 +60,7 @@ def _env_overrides() -> dict[str, str]:
 @lru_cache(maxsize=1)
 def get_settings() -> AppSettings:
     data = _env_overrides()
+    if "allowed_agent_domains" in data and isinstance(data["allowed_agent_domains"], str):
+        domains = [d.strip() for d in data["allowed_agent_domains"].split(",") if d.strip()]
+        data["allowed_agent_domains"] = domains
     return AppSettings(**data)

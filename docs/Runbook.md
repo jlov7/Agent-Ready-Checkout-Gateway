@@ -31,6 +31,7 @@
 
 - Review consent ledger for duplicated nonce.
 - Verify agent domain allow-list.
+- Inspect `idempotency_keys` table for conflicting payload hashes.
 - Rotate shared secrets if signature mismatch.
 
 ### Receipt signing errors

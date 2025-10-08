@@ -10,5 +10,6 @@ All notable changes to this project will be documented in this file.
 - Wired OpenTelemetry, Langfuse telemetry, and structured logging
 - Documented API contracts, threat model, and operational playbook
 - Added CI pipeline, docker-compose stack, and developer tooling
-- Persisted order intents in Postgres with Alembic migrations and expanded API tests
-- Added optional fallbacks for optional dependencies and Makefile tooling with security scans
+- Persisted order intents + idempotency records in Postgres with Alembic migrations and expanded API tests
+- Added policy hook, PSP stub adapter, Postman collection, and documentation for idempotency/webhook hygiene
+- Added optional fallbacks for optional dependencies, observability quickstart, make demo, and security tooling

@@ -9,14 +9,15 @@
 
 ## Reporting a Vulnerability
 
-Email `security@yourcompany.example` with the following:
+No customer data or PII is processed or stored by this alpha project. Secrets are managed locally and secret scanning is enabled in GitHub.
 
-- Description of the vulnerability and impact
-- Steps to reproduce or proof of concept
-- Suggested remediation if available
-- Contact information for follow-up
+Please use GitHub Issues to report vulnerabilities:
 
-We target initial response within 48 hours. Please do not open public issues for security reports.
+- Include a description of the vulnerability and potential impact
+- Provide steps to reproduce or proof of concept
+- Add remediation ideas if available
+
+Issues marked as security-related will be triaged within 48 hours.
 
 ## Patching process
 
@@ -31,3 +32,4 @@ We target initial response within 48 hours. Please do not open public issues for
 - Configure Postgres with TLS and least-privilege roles.
 - Rotate `STRIPE_API_KEY`, `HMAC_WEBHOOK_SECRET`, and receipt signing keys regularly.
 - Monitor Langfuse for anomalous tool-use patterns.
+- Keep Dependabot alerts addressed promptly and monitor GitHub secret scanning findings.

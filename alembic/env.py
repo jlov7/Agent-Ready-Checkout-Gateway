@@ -8,6 +8,7 @@ from sqlalchemy import engine_from_config, pool
 from packages.shared.shared.config.settings import get_settings
 from packages.shared.shared.ledger.database import Base
 from packages.shared.shared.ledger.models import ConsentLedgerEntry  # noqa: F401
+from packages.shared.shared.idempotency.models import IdempotencyRecord  # noqa: F401
 from apps.gateway.app.models.intent import OrderIntent  # noqa: F401
 
 config = context.config
