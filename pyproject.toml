@@ -37,7 +37,7 @@ dependencies = [
     "passlib[bcrypt]==1.7.4",
     "pyjwt[crypto]==2.12.0",
     "cachetools==5.3.3",
-    "slowapi==0.1.8",
+    "slowapi==0.1.9",
     "opentelemetry-api==1.42.0",
     "opentelemetry-sdk==1.42.0",
     "opentelemetry-exporter-otlp==1.42.0",
