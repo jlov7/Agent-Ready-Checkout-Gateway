@@ -65,7 +65,7 @@ requires-dist = [
     { name = "aiosqlite", specifier = "==0.20.0" },
     { name = "alembic", specifier = "==1.13.1" },
     { name = "asyncpg", specifier = "==0.29.0" },
-    { name = "bandit", marker = "extra == 'dev'", specifier = "==1.7.9" },
+    { name = "bandit", marker = "extra == 'dev'", specifier = "==1.9.4" },
     { name = "c2pa-python", specifier = "==0.32.6" },
     { name = "cachetools", specifier = "==5.3.3" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'dev'", specifier = "==7.13.0" },
@@ -227,7 +227,7 @@ wheels = [
 
 [[package]]
 name = "bandit"
-version = "1.7.9"
+version = "1.9.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -235,9 +235,9 @@ dependencies = [
     { name = "rich" },
     { name = "stevedore" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1c/a4/ee391b0f046a6d8919eef246aed7c39849e299cc2e50d918b54add397de6/bandit-1.7.9.tar.gz", hash = "sha256:7c395a436743018f7be0a4cbb0a4ea9b902b6d87264ddecf8cfdc73b4f78ff61", size = 4225771, upload-time = "2024-06-12T22:25:04.416Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/c3/0cb80dfe0f3076e5da7e4c5ad8e57bac6ac357ff4a6406205501cade4965/bandit-1.9.4.tar.gz", hash = "sha256:b589e5de2afe70bd4d53fa0c1da6199f4085af666fde00e8a034f152a52cd628", size = 4242677, upload-time = "2026-02-25T06:44:15.503Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5b/a3/05820b7ce584a1fa01d887ec5e3274bee9f9e02a53aa63de3cb1a5ad7d24/bandit-1.7.9-py3-none-any.whl", hash = "sha256:52077cb339000f337fb25f7e045995c4ad01511e716e5daac37014b9752de8ec", size = 127957, upload-time = "2024-06-12T22:25:01.214Z" },
+    { url = "https://files.pythonhosted.org/packages/05/a4/a26d5b25671d27e03afb5401a0be5899d94ff8fab6a698b1ac5be3ec29ef/bandit-1.9.4-py3-none-any.whl", hash = "sha256:f89ffa663767f5a0585ea075f01020207e966a9c0f2b9ef56a57c7963a3f6f8e", size = 134741, upload-time = "2026-02-25T06:44:13.694Z" },
 ]
 
 [[package]]
