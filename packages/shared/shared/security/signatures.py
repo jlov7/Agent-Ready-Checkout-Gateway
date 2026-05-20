@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Protocol
-
 import hmac
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Protocol
 
 from ..utils.crypto import compute_hmac, sha256_hex
 
 
 class SignatureProvider(Protocol):
-    def verify(self, *, payload: str, nonce: str, signature: str) -> bool:
-        ...
+    def verify(self, *, payload: str, nonce: str, signature: str) -> bool: ...
 
 
 @dataclass
@@ -41,4 +39,4 @@ def hmac_compare(a: str, b: str) -> bool:
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

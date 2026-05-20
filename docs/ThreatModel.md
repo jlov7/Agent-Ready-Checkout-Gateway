@@ -4,7 +4,7 @@
 - Consent drift: explicit `/confirm` with signed transcripts and policy hook review paths
 - Replay attempts: nonce + TTL + idempotency ledger
 - Tool-call loops: MCP tooling limited to deterministic mocks with rate limiting
-- Provenance loss: receipts signed via C2PA with hash-chain linkage
+- Provenance loss: receipts include detached manifests bound to the ledger hash chain
 - Webhook spoofing: Stripe signature verification sample (fail closed)
 
 ## Scope
@@ -13,13 +13,13 @@
 - Postgres-backed consent ledger
 - Stripe test-mode adapter
 - MCP mock servers (inventory and pricing)
-- Receipt signing pipeline (C2PA)
+- Receipt rendering and detached provenance manifest pipeline
 
 ## Assets
 
 - Customer consent transcripts
 - Payment authorization tokens
-- Signed receipts (PNG/PDF)
+- Receipts (PNG/PDF) and detached provenance manifests
 - Stripe API credentials
 - Langfuse telemetry data
 
@@ -47,14 +47,14 @@
 | Payment fraud | Unauthorized card usage | Stripe tokenized flow, idempotency keys, telemetry alerts |
 | Data tampering | Ledger edits | Append-only hash chain, DB role with INSERT-only migration |
 | DoS / brute force | Excess intent creation | `slowapi` rate limiter, domain allow-list, IP throttling |
-| Receipt forgery | Missing provenance | C2PA signing with detached manifests, verification in runbook |
+| Receipt forgery | Missing provenance | Receipt manifests with SHA-256 digests and ledger hash linkage |
 | Secret leakage | Misconfigured env | `.env.example`, secret scanning, `SECURITY.md` guidance |
 
 ## Residual risks
 
 - Stripe test-mode does not simulate 3DS flows.
 - MCP server mocks do not implement full auth; do not expose publicly.
-- C2PA signing requires secure storage of certificates; ensure HSM in production.
+- Embedded C2PA signing is not implemented in this alpha; production deployments should add a signer backed by protected keys.
 
 ## References
 

@@ -1,15 +1,15 @@
 """Initial schema
 
 Revision ID: 20240308_0001
-Revises: 
+Revises:
 Create Date: 2024-03-08 00:00:00.000000
 """
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "20240308_0001"
@@ -36,7 +36,12 @@ def upgrade() -> None:
         sa.Column("payment_reference", sa.String(length=128), nullable=True),
         sa.Column("fulfilled_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("receipts", sa.JSON(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
@@ -56,7 +61,12 @@ def upgrade() -> None:
         sa.Column("payload", sa.JSON(), nullable=False),
         sa.Column("customer_ip", sa.String(length=64), nullable=True),
         sa.Column("user_agent", sa.String(length=512), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
     )
     op.create_index("ix_consent_ledger_intent_id", "consent_ledger", ["intent_id"])
     op.create_index("ix_consent_ledger_transcript_hash", "consent_ledger", ["transcript_hash"])
@@ -67,7 +77,12 @@ def upgrade() -> None:
         sa.Column("endpoint", sa.String(length=64), nullable=False),
         sa.Column("payload_hash", sa.String(length=64), nullable=False),
         sa.Column("response_body", sa.Text(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.PrimaryKeyConstraint("key", "endpoint"),
     )
     op.create_unique_constraint("uq_idempotency_endpoint", "idempotency_keys", ["key", "endpoint"])

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from apps.gateway.main import create_app
+from apps.gateway.main import create_app  # noqa: E402
 
 
 def main() -> None:

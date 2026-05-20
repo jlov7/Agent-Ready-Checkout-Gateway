@@ -1,15 +1,14 @@
-from __future__ import annotations
-
 import json
 from copy import deepcopy
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Request, status
 from opentelemetry import trace
 
+from packages.shared.shared.config.settings import get_settings as load_settings
 from packages.shared.shared.observability.langfuse import emit_trace
 from packages.shared.shared.receipts.generator import generate_receipts
 from packages.shared.shared.schemas.api import (
@@ -30,25 +29,23 @@ from packages.shared.shared.security.signatures import (
 
 from ..core.deps import (
     get_context,
+    get_idempotency_service,
     get_intent_store,
     get_ledger_service,
-    get_idempotency_service,
     get_nonce_service,
     get_settings,
     get_stripe_adapter,
 )
 from ..core.lifespan import limiter
+from ..policies import policy_hook
 from ..services.state import IntentStore
-from ..policies.policy_hook import PolicyDecision, PolicyInput, evaluate_policy
-
 
 router = APIRouter(prefix="/api/v1")
 tracer = trace.get_tracer(__name__)
 
 
-def _rate_limit_value(request: Request) -> str:
-    context = request.app.state.context  # type: ignore[attr-defined]
-    return f"{context.settings.rate_limit_per_minute}/minute"
+def _rate_limit_value() -> str:
+    return f"{load_settings().rate_limit_per_minute}/minute"
 
 
 def _extract_agent_domain(agent_id: str) -> str:
@@ -61,9 +58,10 @@ def _extract_agent_domain(agent_id: str) -> str:
     response_model=IntentCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
-@limiter.limit(lambda request: _rate_limit_value(request))
+@limiter.limit(_rate_limit_value)  # type: ignore[arg-type]
 async def create_intent(
-    payload: IntentCreateRequest,
+    request: Request,
+    payload: IntentCreateRequest = Body(...),
     store: IntentStore = Depends(get_intent_store),
     stripe_adapter=Depends(get_stripe_adapter),
     settings=Depends(get_settings),
@@ -136,7 +134,7 @@ async def confirm_intent(
                     key=idempotency_key, endpoint="confirm", payload=payload_dict
                 )
             except ValueError:
-                raise HTTPException(status_code=409, detail="idempotency conflict")
+                raise HTTPException(status_code=409, detail="idempotency conflict") from None
             if cached:
                 return ConfirmResponse(**json.loads(cached))
 
@@ -152,7 +150,15 @@ async def confirm_intent(
 
         signature_provider = HMACSignatureProvider(secret=settings.hmac_webhook_secret)
 
-        raw_transcript = transcript.model_dump()
+        request_body = await request.json()
+        submitted_transcript = (
+            request_body.get("transcript") if isinstance(request_body, dict) else None
+        )
+        raw_transcript: dict[str, Any] = (
+            deepcopy(submitted_transcript)
+            if isinstance(submitted_transcript, dict)
+            else transcript.model_dump(mode="json")
+        )
         transcript_for_signature = deepcopy(raw_transcript)
         transcript_for_signature["signature"]["value"] = ""
         canonical_transcript = canonicalize_transcript(transcript_for_signature)
@@ -166,10 +172,10 @@ async def confirm_intent(
         transcript_hash = compute_transcript_hash(raw_transcript)
         effective_ip = payload.customer_ip or (request.client.host if request.client else None)
         effective_ua = payload.user_agent or request.headers.get("user-agent")
-        metadata: Dict[str, Any] = {
-            "agent_id": transcript.agent_id,
-            "customer_id": transcript.customer_id,
-            "confirmed_at": datetime.now(timezone.utc).isoformat(),
+        metadata: dict[str, Any] = {
+            "agent_id": str(transcript.agent_id),
+            "customer_id": str(transcript.customer_id),
+            "confirmed_at": datetime.now(UTC).isoformat(),
             "customer_ip": effective_ip,
             "user_agent": effective_ua,
         }
@@ -227,7 +233,7 @@ async def authorize_payment(
                     key=idempotency_key, endpoint="authorize", payload=payload_dict
                 )
             except ValueError:
-                raise HTTPException(status_code=409, detail="idempotency conflict")
+                raise HTTPException(status_code=409, detail="idempotency conflict") from None
             if cached:
                 return AuthorizeResponse(**json.loads(cached))
 
@@ -242,7 +248,7 @@ async def authorize_payment(
             "customer_ip": request.client.host if request.client else None,
         }
 
-        policy_input = PolicyInput(
+        policy_input = policy_hook.PolicyInput(
             intent_id=str(payload.intent_id),
             agent_id=state.agent_id,
             customer_id=state.customer_id,
@@ -250,8 +256,8 @@ async def authorize_payment(
             currency=state.currency,
             risk_signals=risk_signals,
         )
-        policy_result = evaluate_policy(policy_input)
-        if policy_result.decision == PolicyDecision.DENY:
+        policy_result = policy_hook.evaluate_policy(policy_input)
+        if policy_result.decision == policy_hook.PolicyDecision.DENY:
             raise HTTPException(status_code=403, detail={"reasons": policy_result.reasons})
 
         intent = await stripe_adapter.confirm_payment(
@@ -305,11 +311,13 @@ async def fulfil_order(
         if state.receipts:
             raise HTTPException(status_code=409, detail="order already fulfilled")
 
-        issued_at = datetime.now(timezone.utc)
+        issued_at = datetime.now(UTC)
         try:
             receipt = generate_receipts(
                 order_id=str(payload.intent_id),
-                items=[{"sku": item.get("sku"), "qty": item.get("quantity")} for item in state.items],
+                items=[
+                    {"sku": item.get("sku"), "qty": item.get("quantity")} for item in state.items
+                ],
                 total=f"{state.amount_cents/100:.2f}",
                 currency=state.currency,
                 transcript_hash=state.transcript_hash or "",

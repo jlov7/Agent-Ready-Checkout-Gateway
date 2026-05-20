@@ -22,7 +22,8 @@ def get_session_factory() -> async_sessionmaker:
     global _session_factory
     if _session_factory is None:
         get_engine()
-    assert _session_factory is not None
+    if _session_factory is None:
+        raise RuntimeError("database session factory was not initialized")
     return _session_factory
 
 

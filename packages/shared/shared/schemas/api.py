@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -12,7 +12,7 @@ from .acp import ACPTranscript
 class IntentCreateRequest(BaseModel):
     agent_id: str
     customer_id: str
-    cart: Dict[str, Any]
+    cart: dict[str, Any]
     max_total: float
     currency: str = "usd"
 

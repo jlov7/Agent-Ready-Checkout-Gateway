@@ -40,7 +40,7 @@ Headers:
 
 ### POST `/fulfil`
 
-Marks an order as fulfilled, issues signed receipts (PNG + PDF), and publishes telemetry events. Requires the authorization token from the previous step.
+Marks an order as fulfilled, issues PNG/PDF receipts with a detached provenance manifest, and publishes telemetry events. Requires the authorization token from the previous step.
 
 ## Error model
 

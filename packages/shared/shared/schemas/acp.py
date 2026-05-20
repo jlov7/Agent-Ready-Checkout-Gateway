@@ -1,29 +1,30 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 class ToolCall(BaseModel):
     type: str = Field(..., description="Tool or action identifier")
     tool_call_id: UUID = Field(..., description="Unique identifier for the tool invocation")
-    inputs: Dict[str, Any] = Field(default_factory=dict)
-    outputs: List[Dict[str, Any]] = Field(default_factory=list)
+    inputs: dict[str, Any] = Field(default_factory=dict)
+    outputs: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class Intent(BaseModel):
     id: UUID
     expires_at: datetime
-    actions: List[ToolCall] = Field(default_factory=list)
+    actions: list[ToolCall] = Field(default_factory=list)
 
-    @validator("expires_at")
+    @field_validator("expires_at")
+    @classmethod
     def _ensure_timezone(cls, value: datetime) -> datetime:
         if value.tzinfo is None:
             raise ValueError("expires_at must include timezone information")
-        if value < datetime.now(timezone.utc):
+        if value < datetime.now(UTC):
             raise ValueError("intent has expired")
         return value
 
@@ -35,7 +36,8 @@ class Confirmation(BaseModel):
     agent_user: str | None = None
     human_remark: str | None = None
 
-    @validator("timestamp")
+    @field_validator("timestamp")
+    @classmethod
     def _ensure_timestamp_tz(cls, value: datetime) -> datetime:
         if value.tzinfo is None:
             raise ValueError("timestamp must include timezone information")

@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import FastAPI, Response
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.requests import Request
 
+from packages.shared.shared.config.settings import get_settings
 from packages.shared.shared.logging.setup import bind_context, reset_context
 
 from .app.api.routes import router as api_router
-from .app.core.lifespan import lifespan
+from .app.core.lifespan import configure_instrumentation, configure_middlewares, lifespan
 
 
 def create_app() -> FastAPI:
@@ -17,9 +19,11 @@ def create_app() -> FastAPI:
         title="Agent-Ready Checkout Gateway",
         version="0.1.0",
         description="ACP-compliant gateway for agent-initiated ecommerce orders.",
-        lifespan=lifespan,
+        lifespan=lifespan,  # type: ignore[arg-type]
     )
     app.add_middleware(GZipMiddleware, minimum_size=1024)
+    configure_middlewares(app, get_settings())
+    configure_instrumentation(app)
 
     @app.middleware("http")
     async def add_security_headers(request: Request, call_next: Callable):
@@ -29,7 +33,9 @@ def create_app() -> FastAPI:
         finally:
             reset_context()
 
-        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=63072000; includeSubDomains; preload"
+        )
         response.headers["Content-Security-Policy"] = "default-src 'none'"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
@@ -40,7 +46,7 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/health/ready", tags=["health"])
-    async def ready(request: Request) -> dict[str, str]:
+    async def ready(request: Request) -> dict[str, Any]:
         context = request.app.state.context  # type: ignore[attr-defined]
         ready_checks = {
             "stripe": bool(context.stripe_adapter),

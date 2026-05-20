@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from logging.config import fileConfig
+from typing import Any, cast
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
+from apps.gateway.app.models.intent import OrderIntent  # noqa: F401
 from packages.shared.shared.config.settings import get_settings
+from packages.shared.shared.idempotency.models import IdempotencyRecord  # noqa: F401
 from packages.shared.shared.ledger.database import Base
 from packages.shared.shared.ledger.models import ConsentLedgerEntry  # noqa: F401
-from packages.shared.shared.idempotency.models import IdempotencyRecord  # noqa: F401
-from apps.gateway.app.models.intent import OrderIntent  # noqa: F401
 
 config = context.config
 
@@ -42,7 +43,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        cast(dict[str, Any], config.get_section(config.config_ini_section)),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

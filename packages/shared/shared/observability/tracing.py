@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -18,7 +16,7 @@ except ImportError:  # pragma: no cover - optional dependency during testing
     Langfuse = None  # type: ignore
 
 
-def setup_tracing(service_name: str, endpoint: Optional[str]) -> None:
+def setup_tracing(service_name: str, endpoint: str | None) -> None:
     resource = Resource.create({"service.name": service_name})
     provider = TracerProvider(resource=resource)
     if endpoint and OTLPSpanExporter is not None:
@@ -28,7 +26,7 @@ def setup_tracing(service_name: str, endpoint: Optional[str]) -> None:
 
 
 def build_langfuse(
-    public_key: Optional[str], secret_key: Optional[str], host: Optional[str]
+    public_key: str | None, secret_key: str | None, host: str | None
 ):  # pragma: no cover - simple factory
     if Langfuse is None or not public_key or not secret_key or not host:
         return None

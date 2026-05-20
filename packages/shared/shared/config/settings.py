@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
-from typing import List
+from typing import Any
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, HttpUrl, PostgresDsn
+from pydantic import BaseModel, Field
 
 load_dotenv(".env")
 
@@ -15,24 +15,24 @@ class AppSettings(BaseModel):
 
     app_env: str = Field(default="development", alias="APP_ENV")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
-    gateway_host: str = Field(default="0.0.0.0", alias="GATEWAY_HOST")
+    gateway_host: str = Field(default="127.0.0.1", alias="GATEWAY_HOST")
     gateway_port: int = Field(default=8080, alias="GATEWAY_PORT")
-    database_url: PostgresDsn = Field(
+    database_url: str = Field(
         default="postgresql+asyncpg://gateway:gateway@localhost:5432/gateway",
         alias="DATABASE_URL",
     )
     nonce_ttl_seconds: int = Field(default=600, alias="NONCE_TTL_SECONDS")
     rate_limit_per_minute: int = Field(default=30, alias="RATE_LIMIT_PER_MINUTE")
-    allowed_agent_domains: List[str] = Field(default_factory=list, alias="ALLOWED_AGENT_DOMAINS")
+    allowed_agent_domains: list[str] = Field(default_factory=list, alias="ALLOWED_AGENT_DOMAINS")
 
     stripe_api_key: str = Field(default="sk_test_placeholder", alias="STRIPE_API_KEY")
     stripe_webhook_secret: str = Field(default="whsec_placeholder", alias="STRIPE_WEBHOOK_SECRET")
 
-    langfuse_host: HttpUrl | None = Field(default=None, alias="LANGFUSE_HOST")
+    langfuse_host: str | None = Field(default=None, alias="LANGFUSE_HOST")
     langfuse_public_key: str | None = Field(default=None, alias="LANGFUSE_PUBLIC_KEY")
     langfuse_secret_key: str | None = Field(default=None, alias="LANGFUSE_SECRET_KEY")
 
-    otel_exporter_otlp_endpoint: HttpUrl | None = Field(
+    otel_exporter_otlp_endpoint: str | None = Field(
         default=None, alias="OTEL_EXPORTER_OTLP_ENDPOINT"
     )
 
@@ -47,8 +47,8 @@ class AppSettings(BaseModel):
     }
 
 
-def _env_overrides() -> dict[str, str]:
-    overrides: dict[str, str] = {}
+def _env_overrides() -> dict[str, Any]:
+    overrides: dict[str, Any] = {}
     for field_name, field in AppSettings.model_fields.items():
         alias = field.alias or field_name
         value = os.getenv(alias)

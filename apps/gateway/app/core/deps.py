@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from typing import cast
+
 from fastapi import Depends, Request
 
 from .context import AppContext
 
 
 def get_context(request: Request) -> AppContext:
-    return request.app.state.context  # type: ignore[attr-defined]
+    return cast(AppContext, request.app.state.context)
 
 
 def get_intent_store(context: AppContext = Depends(get_context)):

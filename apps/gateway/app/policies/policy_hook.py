@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 
 class PolicyDecision(str, Enum):
@@ -14,7 +14,7 @@ class PolicyDecision(str, Enum):
 @dataclass
 class PolicyResult:
     decision: PolicyDecision
-    reasons: List[str] = field(default_factory=list)
+    reasons: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -24,7 +24,7 @@ class PolicyInput:
     customer_id: str
     amount_cents: int
     currency: str
-    risk_signals: Dict[str, Any]
+    risk_signals: dict[str, Any]
 
 
 def evaluate_policy(data: PolicyInput) -> PolicyResult:
@@ -35,7 +35,7 @@ def evaluate_policy(data: PolicyInput) -> PolicyResult:
     escalates orders over $1,000 for human review.
     """
 
-    reasons: List[str] = []
+    reasons: list[str] = []
 
     if data.amount_cents > 100_000:
         reasons.append("Amount exceeds default review threshold ($1k)")

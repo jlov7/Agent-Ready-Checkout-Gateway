@@ -2,29 +2,29 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, cast
 
 import pytest
 from fastapi.testclient import TestClient
 
 pytest.importorskip("pydantic", minversion="2.0")
 
-from packages.shared.shared.utils.crypto import compute_hmac
-
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test_gateway.db")
 os.environ.setdefault("STRIPE_API_KEY", "sk_test_stub")
 os.environ.setdefault("HMAC_WEBHOOK_SECRET", "secret123")
 os.environ.setdefault("ALLOWED_AGENT_DOMAINS", "agents.example.com")
 
+from packages.shared.shared.utils.crypto import compute_hmac  # noqa: E402
+
 
 class FakeStripeAdapter:
     def __init__(self):
-        self.created: Dict[str, Any] = {}
-        self.confirmed: Dict[str, Any] = {}
+        self.created: dict[str, Any] = {}
+        self.confirmed: dict[str, Any] = {}
 
     async def create_payment_intent(
-        self, *, amount_cents: int, currency: str, metadata: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, *, amount_cents: int, currency: str, metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         self.created = {
             "id": "pi_test_123",
             "client_secret": "secret_test",
@@ -34,7 +34,7 @@ class FakeStripeAdapter:
         }
         return self.created
 
-    async def confirm_payment(self, *, intent_id: str, payment_method_token: str) -> Dict[str, Any]:
+    async def confirm_payment(self, *, intent_id: str, payment_method_token: str) -> dict[str, Any]:
         self.confirmed = {
             "id": intent_id,
             "status": "succeeded",
@@ -42,14 +42,14 @@ class FakeStripeAdapter:
         }
         return self.confirmed
 
-    async def capture_payment(self, *, intent_id: str) -> Dict[str, Any]:
+    async def capture_payment(self, *, intent_id: str) -> dict[str, Any]:
         return {"id": intent_id, "status": "succeeded"}
 
 
 @pytest.fixture
 def client(monkeypatch):
-    from apps.gateway.main import create_app
     from apps.gateway.app.core.deps import get_stripe_adapter
+    from apps.gateway.main import create_app
 
     db_path = Path("test_gateway.db")
     if db_path.exists():
@@ -67,7 +67,7 @@ def client(monkeypatch):
         yield client
 
 
-def _sign_transcript(transcript: Dict[str, Any], secret: str) -> None:
+def _sign_transcript(transcript: dict[str, Any], secret: str) -> None:
     import json
     from copy import deepcopy
 
@@ -161,7 +161,7 @@ def test_order_happy_path(client: TestClient):
     assert Path(fulfil_data["receipt_pdf_path"]).exists()
 
 
-def _create_intent(client: TestClient) -> Dict[str, Any]:
+def _create_intent(client: TestClient) -> dict[str, Any]:
     resp = client.post(
         "/api/v1/intents",
         json={
@@ -173,7 +173,7 @@ def _create_intent(client: TestClient) -> Dict[str, Any]:
         },
     )
     assert resp.status_code == 201, resp.text
-    return resp.json()
+    return cast(dict[str, Any], resp.json())
 
 
 def test_create_intent_blocks_unlisted_domain(client: TestClient):

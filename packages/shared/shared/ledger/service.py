@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -29,9 +29,7 @@ class ConsentLedgerService:
         async with self._session_factory() as session:
             previous_hash = await self._get_latest_entry_hash(session)
             canon_payload = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-            entry_hash = sha256_hex(
-                f"{transcript_hash}|{previous_hash or ''}|{canon_payload}"
-            )
+            entry_hash = sha256_hex(f"{transcript_hash}|{previous_hash or ''}|{canon_payload}")
 
             entry = ConsentLedgerEntry(
                 id=str(uuid4()),
@@ -48,9 +46,11 @@ class ConsentLedgerService:
             await session.commit()
             return entry
 
-    async def _get_latest_entry_hash(self, session: AsyncSession) -> Optional[str]:
+    async def _get_latest_entry_hash(self, session: AsyncSession) -> str | None:
         result = await session.execute(
-            select(ConsentLedgerEntry.entry_hash).order_by(ConsentLedgerEntry.created_at.desc()).limit(1)
+            select(ConsentLedgerEntry.entry_hash)
+            .order_by(ConsentLedgerEntry.created_at.desc())
+            .limit(1)
         )
         row = result.scalar_one_or_none()
         return row

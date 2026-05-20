@@ -4,14 +4,13 @@ import asyncio
 import json
 import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any, Dict, TypedDict
+from datetime import UTC, datetime
+from typing import Any, TypedDict
 
 import httpx
 from langgraph.graph import END, StateGraph
 
 from packages.shared.shared.utils.crypto import compute_hmac
-
 
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8080/api/v1")
 INVENTORY_URL = os.getenv("INVENTORY_URL", "http://localhost:8100")
@@ -20,11 +19,11 @@ HMAC_SECRET = os.getenv("HMAC_WEBHOOK_SECRET", "secret123")
 
 
 class OrderState(TypedDict, total=False):
-    cart: Dict[str, Any]
-    intent: Dict[str, Any]
-    confirmation: Dict[str, Any]
-    authorization: Dict[str, Any]
-    fulfilment: Dict[str, Any]
+    cart: dict[str, Any]
+    intent: dict[str, Any]
+    confirmation: dict[str, Any]
+    authorization: dict[str, Any]
+    fulfilment: dict[str, Any]
 
 
 @dataclass
@@ -34,19 +33,21 @@ class AgentConfig:
     currency: str = "usd"
 
 
-async def fetch_inventory(client: httpx.AsyncClient, sku: str) -> Dict[str, Any]:
+async def fetch_inventory(client: httpx.AsyncClient, sku: str) -> dict[str, Any]:
     resp = await client.get(f"{INVENTORY_URL}/inventory/{sku}")
     resp.raise_for_status()
     return resp.json()
 
 
-async def fetch_price(client: httpx.AsyncClient, sku: str) -> Dict[str, Any]:
+async def fetch_price(client: httpx.AsyncClient, sku: str) -> dict[str, Any]:
     resp = await client.get(f"{PRICING_URL}/pricing/{sku}")
     resp.raise_for_status()
     return resp.json()
 
 
-async def node_build_cart(state: OrderState, config: AgentConfig, client: httpx.AsyncClient) -> OrderState:
+async def node_build_cart(
+    state: OrderState, config: AgentConfig, client: httpx.AsyncClient
+) -> OrderState:
     sku = state.get("cart", {}).get("sku", "SKU123")
     inventory = await fetch_inventory(client, sku)
     price = await fetch_price(client, sku)
@@ -56,7 +57,9 @@ async def node_build_cart(state: OrderState, config: AgentConfig, client: httpx.
                 "sku": sku,
                 "name": inventory.get("name"),
                 "quantity": 1,
-                "unit_price_cents": price.get("price", {}).get("unit_price", price.get("unit_price", 0)),
+                "unit_price_cents": price.get("price", {}).get(
+                    "unit_price", price.get("unit_price", 0)
+                ),
             }
         ]
     }
@@ -64,7 +67,9 @@ async def node_build_cart(state: OrderState, config: AgentConfig, client: httpx.
     return state
 
 
-async def node_create_intent(state: OrderState, config: AgentConfig, client: httpx.AsyncClient) -> OrderState:
+async def node_create_intent(
+    state: OrderState, config: AgentConfig, client: httpx.AsyncClient
+) -> OrderState:
     cart = state["cart"]
     max_total = sum(item["unit_price_cents"] for item in cart["items"]) / 100
     resp = await client.post(
@@ -82,7 +87,9 @@ async def node_create_intent(state: OrderState, config: AgentConfig, client: htt
     return state
 
 
-async def node_confirm(state: OrderState, config: AgentConfig, client: httpx.AsyncClient) -> OrderState:
+async def node_confirm(
+    state: OrderState, config: AgentConfig, client: httpx.AsyncClient
+) -> OrderState:
     intent = state["intent"]
     nonce = intent["nonce"]
     intent_id = intent["intent_id"]
@@ -103,7 +110,7 @@ async def node_confirm(state: OrderState, config: AgentConfig, client: httpx.Asy
         },
         "confirmation": {
             "method": "human",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "channel": "cli",
             "human_remark": "Approved via mock agent CLI",
         },
@@ -134,7 +141,9 @@ async def node_confirm(state: OrderState, config: AgentConfig, client: httpx.Asy
     return state
 
 
-async def node_authorize(state: OrderState, config: AgentConfig, client: httpx.AsyncClient) -> OrderState:
+async def node_authorize(
+    state: OrderState, config: AgentConfig, client: httpx.AsyncClient
+) -> OrderState:
     intent = state["intent"]["intent_id"]
     transcript_hash = state["confirmation"]["transcript_hash"]
     resp = await client.post(
@@ -150,7 +159,9 @@ async def node_authorize(state: OrderState, config: AgentConfig, client: httpx.A
     return state
 
 
-async def node_fulfil(state: OrderState, config: AgentConfig, client: httpx.AsyncClient) -> OrderState:
+async def node_fulfil(
+    state: OrderState, config: AgentConfig, client: httpx.AsyncClient
+) -> OrderState:
     intent = state["intent"]["intent_id"]
     authorization = state["authorization"]["authorization_id"]
     resp = await client.post(

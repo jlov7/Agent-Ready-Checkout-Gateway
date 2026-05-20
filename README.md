@@ -1,6 +1,6 @@
 # Agent-Ready Checkout Gateway
 
-Turn any shop into agent-ready checkout: consented orders from AI agents, with audit trails and C2PA-stamped receipts. This is an **alpha** reference implementation—pattern demo, not a drop-in PCI replacement.
+Turn any shop into agent-ready checkout: consented orders from AI agents, with audit trails and provenance-ready receipts. This is an **alpha** reference implementation—pattern demo, not a drop-in PCI replacement.
 
 ## Features
 
@@ -8,7 +8,7 @@ Turn any shop into agent-ready checkout: consented orders from AI agents, with a
 - Stripe test-mode adapter plus a portable example PSP stub
 - Append-only consent ledger backed by Postgres with hash chaining and idempotency keys
 - Policy hook (allow/deny/review) invoked on authorization, with reasons in responses
-- C2PA-ready receipt pipeline with graceful fallbacks when optional deps are absent
+- Receipt pipeline that emits PNG/PDF receipts plus detached provenance manifests
 - OpenTelemetry + Langfuse observability, structured JSON logs, and trace correlation
 - Mock MCP inventory/pricing servers, LangGraph demo agent, and Postman collection
 
@@ -31,7 +31,7 @@ Navigate to:
 - Swagger UI: `http://localhost:8080/docs`
 - Redoc UI: `http://localhost:8080/redoc`
 
-**Optional extras:** install `pillow`, `reportlab`, `c2pa-python`, `stripe`, and `slowapi` to enable signed receipts, PSP calls, and rate limiting. Without them, the gateway emits informative warnings.
+Receipt rendering, PSP calls, and rate limiting are backed by `pillow`, `reportlab`, `stripe`, and `slowapi`.
 
 ### Seed sample data
 
@@ -44,7 +44,7 @@ Navigate to:
 ```bash
 make test
 make lint
-bandit -r apps packages clients
+bandit -r apps packages clients -x '*/tests/*'
 ```
 
 ### Demo the full flow (inventory → pricing → gateway → mock agent)

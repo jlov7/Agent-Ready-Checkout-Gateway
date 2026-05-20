@@ -24,7 +24,7 @@ def configure_logging(level: str = "INFO") -> None:
     if structlog is None:  # pragma: no cover - fallback path
         return
 
-    timestamper = structlog.processors.TimeStamper(fmt="iso", default_timezone="UTC")
+    timestamper = structlog.processors.TimeStamper(fmt="iso", utc=True)
 
     structlog.configure(
         processors=[

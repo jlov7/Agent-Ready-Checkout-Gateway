@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
   pull_request:
 
 jobs:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
-      DATABASE_URL: sqlite+aiosqlite:///$(pwd)/test.db
+      DATABASE_URL: sqlite+aiosqlite:///./test_gateway.db
       STRIPE_API_KEY: sk_test_placeholder
       HMAC_WEBHOOK_SECRET: secret123
       ALLOWED_AGENT_DOMAINS: agents.example.com
@@ -28,6 +28,6 @@ jobs:
       - name: Mypy
         run: mypy .
       - name: Bandit
-        run: bandit -r apps packages clients
+        run: bandit -r apps packages clients -x '*/tests/*'
       - name: Pytest
         run: pytest -p pytest_cov

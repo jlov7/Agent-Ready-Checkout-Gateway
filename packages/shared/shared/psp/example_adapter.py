@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 
 class ExampleAdapter:
@@ -12,8 +12,8 @@ class ExampleAdapter:
     """
 
     async def create_payment_intent(
-        self, *, amount_cents: int, currency: str, metadata: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, *, amount_cents: int, currency: str, metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         await asyncio.sleep(0)
         return {
             "id": "example_intent",
@@ -24,9 +24,7 @@ class ExampleAdapter:
             "metadata": metadata,
         }
 
-    async def confirm_payment(
-        self, *, intent_id: str, payment_method_token: str
-    ) -> Dict[str, Any]:
+    async def confirm_payment(self, *, intent_id: str, payment_method_token: str) -> dict[str, Any]:
         await asyncio.sleep(0)
         return {
             "id": intent_id,
@@ -34,6 +32,6 @@ class ExampleAdapter:
             "charges": {"data": [{"id": f"example_charge_{payment_method_token}"}]},
         }
 
-    async def capture_payment(self, *, intent_id: str) -> Dict[str, Any]:
+    async def capture_payment(self, *, intent_id: str) -> dict[str, Any]:
         await asyncio.sleep(0)
         return {"id": intent_id, "status": "succeeded"}

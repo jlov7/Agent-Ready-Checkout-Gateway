@@ -17,7 +17,7 @@
 1. Check Langfuse dashboard for recent errors and latency spikes.
 2. Inspect structured logs filtered by `trace_id` for failing intents.
 3. Validate ledger integrity using `python -m apps.gateway.scripts.verify_ledger`.
-4. Confirm receipt signing keys are valid (`openssl x509 -in cert.pem -noout -text`).
+4. Confirm receipt manifests match generated PNG/PDF artifacts.
 
 ## Common incidents
 
@@ -34,11 +34,11 @@
 - Inspect `idempotency_keys` table for conflicting payload hashes.
 - Rotate shared secrets if signature mismatch.
 
-### Receipt signing errors
+### Receipt generation errors
 
-- Ensure C2PA CLI dependencies installed.
-- Certificates must allow signing and not be expired.
-- Temporary mitigation: fallback to unsigned receipt, flag order for manual review.
+- Verify the receipt output directory is writable.
+- Confirm the detached manifest digest matches the expected order payload.
+- Temporary mitigation: regenerate the receipt and flag order for manual review.
 
 ## Disaster recovery
 

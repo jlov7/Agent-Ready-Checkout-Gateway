@@ -7,10 +7,12 @@ __pycache__/
 .ruff_cache/
 .coverage
 coverage.xml
+test*.db
 
 # Environments
 .env
 .env.*
+!.env.example
 .venv/
 env/
 venv/
@@ -33,5 +35,5 @@ build/
 otel/*.db
 langfuse/data/
 
-# Receipts
-receipts/
+# Generated receipts
+/receipts/
