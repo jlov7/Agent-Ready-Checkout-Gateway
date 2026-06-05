@@ -37,3 +37,5 @@ langfuse/data/
 
 # Generated receipts
 /receipts/
+
+.specstory/
